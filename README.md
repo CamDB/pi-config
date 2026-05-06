@@ -20,4 +20,3 @@ Personal configuration for the [Pi coding agent](https://pi.dev).
 
 - **APPEND_SYSTEM.md** — appends git commit + push instructions to the system prompt.
 - **settings.json** — global Pi settings.
-- **bin/** — bundled `fd` and `rg` binaries.
