@@ -1,0 +1,11 @@
+# Secrets
+agent/auth.json
+
+# Personal session history
+agent/sessions/
+
+# Local binaries (Windows-specific, easily reinstalled)
+agent/bin/
+
+# Usage/metrics tracking files
+agent/*-usage.json

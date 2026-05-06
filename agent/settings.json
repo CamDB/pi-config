@@ -1,0 +1,7 @@
+{
+  "lastChangelogVersion": "0.70.2",
+  "packages": [],
+  "defaultProvider": "opencode-go",
+  "defaultModel": "qwen3.6-plus",
+  "defaultThinkingLevel": "high"
+}
