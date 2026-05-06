@@ -1,7 +1,9 @@
 {
-  "lastChangelogVersion": "0.70.2",
+  "lastChangelogVersion": "0.73.0",
   "packages": [],
   "defaultProvider": "opencode-go",
-  "defaultModel": "qwen3.6-plus",
-  "defaultThinkingLevel": "high"
+  "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "high",
+  "doubleEscapeAction": "tree",
+  "theme": "gruvbox-dark"
 }
