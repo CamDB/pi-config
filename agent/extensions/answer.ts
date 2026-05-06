@@ -10,7 +10,7 @@
  * 4. Submits the compiled answers when done
  */
 
-import { complete, type Model, type Api, type UserMessage } from "@mariozechner/pi-ai";
+import { complete, type UserMessage } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext, ModelRegistry } from "@mariozechner/pi-coding-agent";
 import { BorderedLoader } from "@mariozechner/pi-coding-agent";
 import {
@@ -71,21 +71,20 @@ const PRIMARY_MODEL_PROVIDER = "opencode-go";
 const PRIMARY_MODEL_ID = "deepseek-v4-flash";
 
 /**
- * Use deepseek-v4-flash via opencode-go for extraction, falling back to the current model.
+ * Use deepseek-v4-flash via opencode-go for extraction. Throws if unavailable.
  */
 async function selectExtractionModel(
-	currentModel: Model<Api>,
 	modelRegistry: ModelRegistry,
 ): Promise<Model<Api>> {
 	const primaryModel = modelRegistry.find(PRIMARY_MODEL_PROVIDER, PRIMARY_MODEL_ID);
-	if (primaryModel) {
-		const auth = await modelRegistry.getApiKeyAndHeaders(primaryModel);
-		if (auth.ok) {
-			return primaryModel;
-		}
+	if (!primaryModel) {
+		throw new Error(`Model ${PRIMARY_MODEL_PROVIDER}/${PRIMARY_MODEL_ID} not found in registry`);
 	}
-
-	return currentModel;
+	const auth = await modelRegistry.getApiKeyAndHeaders(primaryModel);
+	if (!auth.ok) {
+		throw new Error(`API key error for ${PRIMARY_MODEL_PROVIDER}/${PRIMARY_MODEL_ID}: ${auth.error}`);
+	}
+	return primaryModel;
 }
 
 /**
@@ -435,8 +434,8 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 
-		// Use deepseek-v4-flash for extraction, falling back to the current model
-			const extractionModel = await selectExtractionModel(ctx.model, ctx.modelRegistry);
+		// Use deepseek-v4-flash for extraction (no fallback)
+			const extractionModel = await selectExtractionModel(ctx.modelRegistry);
 
 			// Run extraction with loader UI
 			let extractionError: Error | null = null;
