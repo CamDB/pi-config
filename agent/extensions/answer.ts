@@ -67,35 +67,25 @@ Example output:
   ]
 }`;
 
-const CODEX_MODEL_ID = "gpt-5.3";
-const HAIKU_MODEL_ID = "claude-haiku-4-5";
+const PRIMARY_MODEL_PROVIDER = "opencode-go";
+const PRIMARY_MODEL_ID = "deepseek-v4-flash";
 
 /**
- * Prefer GPT-5.3 for extraction when available, otherwise fallback to haiku or the current model.
+ * Use deepseek-v4-flash via opencode-go for extraction, falling back to the current model.
  */
 async function selectExtractionModel(
 	currentModel: Model<Api>,
 	modelRegistry: ModelRegistry,
 ): Promise<Model<Api>> {
-	const codexModel = modelRegistry.find("openai-codex", CODEX_MODEL_ID);
-	if (codexModel) {
-		const auth = await modelRegistry.getApiKeyAndHeaders(codexModel);
+	const primaryModel = modelRegistry.find(PRIMARY_MODEL_PROVIDER, PRIMARY_MODEL_ID);
+	if (primaryModel) {
+		const auth = await modelRegistry.getApiKeyAndHeaders(primaryModel);
 		if (auth.ok) {
-			return codexModel;
+			return primaryModel;
 		}
 	}
 
-	const haikuModel = modelRegistry.find("anthropic", HAIKU_MODEL_ID);
-	if (!haikuModel) {
-		return currentModel;
-	}
-
-	const auth = await modelRegistry.getApiKeyAndHeaders(haikuModel);
-	if (!auth.ok) {
-		return currentModel;
-	}
-
-	return haikuModel;
+	return currentModel;
 }
 
 /**
@@ -445,79 +435,94 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 
-			// Select the best model for extraction (prefer GPT-5.3, then haiku)
+		// Use deepseek-v4-flash for extraction, falling back to the current model
 			const extractionModel = await selectExtractionModel(ctx.model, ctx.modelRegistry);
 
 			// Run extraction with loader UI
+			let extractionError: Error | null = null;
+
 			const extractionResult = await ctx.ui.custom<ExtractionResult | null>((tui, theme, _kb, done) => {
-				const loader = new BorderedLoader(tui, theme, `Extracting questions using ${extractionModel.id}...`);
-				loader.onAbort = () => done(null);
+			const loader = new BorderedLoader(tui, theme, `Extracting questions using ${extractionModel.id}...`);
+			loader.onAbort = () => done(null);
 
-				const doExtract = async () => {
-					const auth = await ctx.modelRegistry.getApiKeyAndHeaders(extractionModel);
-					if (!auth.ok) {
-						throw new Error(auth.error);
-					}
-					const userMessage: UserMessage = {
-						role: "user",
-						content: [{ type: "text", text: lastAssistantText! }],
-						timestamp: Date.now(),
-					};
-
-					const response = await complete(
-						extractionModel,
-						{ systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
-						{ apiKey: auth.apiKey, headers: auth.headers, signal: loader.signal },
-					);
-
-					if (response.stopReason === "aborted") {
-						return null;
-					}
-
-					const responseText = response.content
-						.filter((c): c is { type: "text"; text: string } => c.type === "text")
-						.map((c) => c.text)
-						.join("\n");
-
-					return parseExtractionResult(responseText);
+			const doExtract = async () => {
+				const auth = await ctx.modelRegistry.getApiKeyAndHeaders(extractionModel);
+				if (!auth.ok) {
+					throw new Error(`API key error: ${auth.error}`);
+				}
+				const userMessage: UserMessage = {
+					role: "user",
+					content: [{ type: "text", text: lastAssistantText! }],
+					timestamp: Date.now(),
 				};
 
-				doExtract()
-					.then(done)
-					.catch(() => done(null));
+				const response = await complete(
+					extractionModel,
+					{ systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
+					{ apiKey: auth.apiKey, headers: auth.headers, signal: loader.signal },
+				);
 
-				return loader;
-			});
+				if (response.stopReason === "aborted") {
+					return null;
+				}
 
-			if (extractionResult === null) {
-				ctx.ui.notify("Cancelled", "info");
-				return;
-			}
+				const responseText = response.content
+					.filter((c): c is { type: "text"; text: string } => c.type === "text")
+					.map((c) => c.text)
+					.join("\n");
 
-			if (extractionResult.questions.length === 0) {
-				ctx.ui.notify("No questions found in the last message", "info");
-				return;
-			}
+				return parseExtractionResult(responseText);
+			};
 
-			// Show the Q&A component
-			const answersResult = await ctx.ui.custom<string | null>((tui, _theme, _kb, done) => {
-				return new QnAComponent(extractionResult.questions, tui, done);
-			});
+			doExtract()
+				.then(done)
+				.catch((err) => {
+					extractionError = err instanceof Error ? err : new Error(String(err));
+					done(null);
+				});
 
-			if (answersResult === null) {
-				ctx.ui.notify("Cancelled", "info");
-				return;
-			}
+			return loader;
+		});
 
-			// Send the answers directly as a message and trigger a turn
-			pi.sendMessage(
-				{
-					customType: "answers",
-					content: "I answered your questions in the following way:\n\n" + answersResult,
-					display: true,
-				},
-				{ triggerTurn: true },
-			);
+		if (extractionError) {
+			ctx.ui.notify(`Extraction failed: ${extractionError.message}`, "error");
+			return;
+		}
+
+		if (extractionResult === null) {
+			ctx.ui.notify("Cancelled", "info");
+			return;
+		}
+
+		if (extractionResult.questions.length === 0) {
+			ctx.ui.notify("No questions found in the last message", "info");
+			return;
+		}
+
+		// Show the Q&A component
+		const answersResult = await ctx.ui.custom<string | null>((tui, _theme, _kb, done) => {
+			return new QnAComponent(extractionResult.questions, tui, done);
+		});
+
+		if (answersResult === null) {
+			ctx.ui.notify("Cancelled", "info");
+			return;
+		}
+
+		if (!answersResult.trim()) {
+			ctx.ui.notify("No answers provided", "warn");
+			return;
+		}
+
+		// Send the answers directly as a message and trigger a turn
+		pi.sendMessage(
+			{
+				customType: "answers",
+				content: "I answered your questions in the following way:\n\n" + answersResult,
+				display: true,
+			},
+			{ triggerTurn: true },
+		);
 	};
 
 	pi.registerCommand("answer", {
