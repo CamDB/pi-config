@@ -8,4 +8,11 @@ git add <changed files>
 git commit -m "brief description"
 ```
 
-Keep the repo in sync — changes should be committed promptly so nothing is lost.
+Keep the repo in sync — changes should be committed promptly so nothing is lost. Always push after committing:
+
+```bash
+cd C:\devel\pi
+git add <changed files>
+git commit -m "brief description"
+git push
+```
