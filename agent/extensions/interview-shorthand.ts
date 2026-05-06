@@ -7,8 +7,8 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("interview", {
     description: "Interview mode — investigate then ask clarifying questions",
     argumentHint: "<prompt>",
-    handler: (ctx) => {
-      ctx.ui.setEditorText(`/skill:interview ${ctx.args}`);
+    handler: (args, ctx) => {
+      ctx.ui.setEditorText(`/skill:interview ${args}`);
     },
   });
 }
