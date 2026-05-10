@@ -1,3 +1,18 @@
+# Web, Code, and Docs Research
+
+Use the `ketch` CLI via the bash tool for external research — web pages, OSS code, library docs.
+- Web search: `ketch search "query"` — titles, URLs, snippets
+- Web search + full content: `ketch search "query" --scrape`
+- Scrape: `ketch scrape <url>` — fetches a URL and returns clean markdown
+- Batch scrape: `ketch scrape <url1> <url2> ...` — concurrent fetch
+- Crawl: `ketch crawl <url> --sitemap --background` — crawl a site, poll with `ketch crawl status`
+- Code search: `ketch code "query" --lang go` — real OSS code with line + repo + stars
+- Library docs: `ketch docs "query" --library /org/repo` — version-aware curated snippets
+- All commands support `--json` for structured output.
+- The operator has already configured the search/code/docs backends and browser. Do not override unless requested.
+
+**Important:** For social media searches like Hacker News, Reddit, or GitHub Issues, do not use `ketch`. Instead, use the tools provided by the `social-media-search` extension (e.g. `search_hn`, `search_reddit`, `search_github`).
+
 # Modifying this Pi configuration
 
 My personal Pi configuration lives at `C:\devel\pi` and is backed by a Git repository. When making changes to config files (extensions, skills, settings, this file, etc.), remember to commit them:

@@ -1,11 +1,10 @@
 /**
- * Web Search Extension for Pi
+ * Social Media Search Extension for Pi
  *
  * Provides LLM-callable tools for searching:
  * - Hacker News (via Algolia API)
  * - Reddit (via native JSON API)
  * - GitHub Issues (via GitHub API)
- * - SearXNG (self-hosted search)
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -217,54 +216,10 @@ async function searchGitHub(query: string, size: number, repo?: string, state?: 
 }
 
 // ---------------------------------------------------------------------------
-// SearXNG
-// ---------------------------------------------------------------------------
-
-async function searchSearXNG(query: string, size: number, searxngUrl: string, categories?: string, timeRange?: string, after?: string) {
-	const params: Record<string, unknown> = { q: query, format: "json", pageno: 1 };
-	if (categories) params.categories = categories;
-	if (timeRange) params.time_range = timeRange;
-
-	const url = searxngUrl.replace(/\/$/, "") + "/search";
-	const data = await fetchJSON(url, { params }) as Record<string, unknown>;
-	const results = (data.results || []) as Array<Record<string, unknown>>;
-
-	const afterTs = after ? parseAfter(after) : undefined;
-	const seenUrls = new Set<string>();
-	const items: Array<Record<string, unknown>> = [];
-
-	for (const r of results) {
-		const url = String(r.url || "");
-		if (seenUrls.has(url)) continue;
-		seenUrls.add(url);
-
-		const published = String(r.publishedDate || "");
-		let ts = 0;
-		if (published) {
-			try { ts = Math.floor(new Date(published).getTime() / 1000); } catch { ts = 0; }
-		}
-		if (afterTs && ts && ts < afterTs) continue;
-		if (items.length >= size) break;
-
-		items.push({
-			title: clean(String(r.title || "")),
-			url,
-			body: clean(String(r.content || "")),
-			date: published ? published.slice(0, 10) : "",
-			score: Math.round(((r.score as number) || 0) * 1000) / 1000,
-			engine: String(r.engine || ""),
-		});
-	}
-	return items;
-}
-
-// ---------------------------------------------------------------------------
 // Extension
 // ---------------------------------------------------------------------------
 
-export default function webSearchExtension(pi: ExtensionAPI) {
-	const searxngUrl = process.env.SEARXNG_URL ?? "https://search.dbamford.co.uk";
-
+export default function socialMediaSearchExtension(pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "search_hn",
 		label: "Search HN",
@@ -360,27 +315,6 @@ export default function webSearchExtension(pi: ExtensionAPI) {
 			const items = await searchGitHub(params.query, params.size ?? 10, params.repo, params.state ?? "open", params.after, params.minScore);
 			const text = items.length === 0 ? "No results." : items.map(i =>
 				`#${i.id}: ${i.title} [${i.state}]\n  ${i.url} | ${i.comments} comments`
-			).join("\n\n");
-			return { content: [{ type: "text", text }], details: { count: items.length, items } };
-		},
-	});
-
-	pi.registerTool({
-		name: "search_web",
-		label: "Search Web",
-		description: "Web search via SearXNG",
-		promptSnippet: "Search the web for general info",
-		parameters: Type.Object({
-			query: Type.String(),
-			size: Type.Optional(Type.Number({ default: 10 })),
-			categories: Type.Optional(Type.String()),
-			timeRange: Type.Optional(StringEnum(["day", "week", "month", "year"])),
-			after: Type.Optional(Type.String()),
-		}),
-		async execute(_id, params) {
-			const items = await searchSearXNG(params.query, params.size ?? 10, searxngUrl, params.categories, params.timeRange, params.after);
-			const text = items.length === 0 ? "No results." : items.map(i =>
-				`${i.title}\n  ${i.url}\n  ${String(i.body).slice(0, 150)}...`
 			).join("\n\n");
 			return { content: [{ type: "text", text }], details: { count: items.length, items } };
 		},

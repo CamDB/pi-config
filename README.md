@@ -6,7 +6,7 @@ Personal configuration for the [Pi coding agent](https://pi.dev).
 
 - **review** — `/review` command for code reviews (PR, branch, commit, or uncommitted diffs). Copied from [mitsuhiko/agent-stuff](https://github.com/mitsuhiko/agent-stuff/blob/main/extensions/review.ts)
 - **answer** — `/answer` extracts questions from assistant messages and provides an interactive Q&A TUI. Copied from [mitsuhiko/agent-stuff](https://github.com/mitsuhiko/agent-stuff/blob/main/extensions/answer.ts)
-- **websearch** — adds `search_hn`, `search_reddit`, `search_github`, and `search_web` tools for LLM-callable web searches. Custom.
+- **social-media-search** — adds `search_hn`, `search_reddit`, and `search_github` tools for LLM-callable social media searches. Custom.
 
 ## Skills
 
@@ -18,5 +18,14 @@ Personal configuration for the [Pi coding agent](https://pi.dev).
 
 ## Other
 
-- **APPEND_SYSTEM.md** — appends git commit + push instructions to the system prompt.
+- **APPEND_SYSTEM.md** — appends git commit + push instructions to the system prompt, as well as instructions on using Ketch for search.
 - **settings.json** — global Pi settings.
+
+## SearXNG
+
+We run a local instance of SearXNG in a Docker container to provide a self-hosted search engine. To start it:
+
+```bash
+cd searxng
+docker-compose up -d
+```
