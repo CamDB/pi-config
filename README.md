@@ -21,11 +21,31 @@ Personal configuration for the [Pi coding agent](https://pi.dev).
 - **APPEND_SYSTEM.md** — appends git commit + push instructions to the system prompt, as well as instructions on using Ketch for search.
 - **settings.json** — global Pi settings.
 
-## SearXNG
+## Search & Agents Setup
 
-We run a local instance of SearXNG in a Docker container to provide a self-hosted search engine. To start it:
+We use `ketch` for web, code, and documentation searches by our agents, backed by a self-hosted `SearXNG` instance for web search privacy.
+
+### 1. Start SearXNG
+
+We run a local instance of SearXNG in a Docker container to provide a self-hosted search engine on port `9720`.
 
 ```bash
 cd searxng
 docker-compose up -d
+```
+
+### 2. Configure Ketch
+
+Once Ketch is installed (e.g., `brew install 1broseidon/tap/ketch`), configure it to use our SearXNG instance and Context7 API key for documentation searches:
+
+```bash
+# Point web searches to local SearXNG
+ketch config set backend searxng
+ketch config set searxng_url http://localhost:9720
+
+# Set Context7 key for library docs search
+ketch config set context7_api_key <your_api_key>
+
+# (Optional) Setup headless chrome for JS-rendered pages
+ketch config set browser chrome
 ```
