@@ -1,8 +1,10 @@
 {
   "lastChangelogVersion": "0.74.0",
-  "packages": [],
-  "defaultProvider": "google",
-  "defaultModel": "gemini-3.1-pro-preview",
+  "packages": [
+    "npm:@aliou/pi-guardrails"
+  ],
+  "defaultProvider": "opencode-go",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
   "doubleEscapeAction": "tree",
   "theme": "gruvbox-dark"
