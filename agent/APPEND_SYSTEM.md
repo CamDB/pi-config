@@ -97,6 +97,30 @@ The session JSONL schema is documented at:
 `<pi-install>/docs/session-format.md`. Cross-reference it when consuming
 session objects; do not assume field names.
 
+# Implementation Discipline
+
+## Do not build without explicit instruction
+
+- **Discussion mode:** When the user asks a question, requests a suggestion,
+  or explores options ("how would you...", "suggest a method", "what do you
+  think about..."), **only discuss**. Do not write code, do not edit files.
+- **Ambiguous requests:** When the user says "I want to build..." or "let's
+  add..." without a clear specification, ask clarifying questions. Present
+  a plan and wait for explicit confirmation before implementing.
+- **Direct instructions only:** Only write code when the user gives a clear
+  directive: "fix the bug in...", "add a function that...", "create a file
+  called...", "implement the...", etc. If in doubt, ask.
+
+## Use the skeleton skill for greenfield work
+
+When asked to build something new from scratch (a new extension, module,
+feature, or script), invoke the `skeleton` skill. Produce stubs with TODO
+comments and get structural approval before writing any implementation.
+This prevents writing hundreds of lines against wrong assumptions.
+
+For modifications to existing code (not greenfield), use the `interview`
+skill instead to clarify scope and approach before editing.
+
 # Bash tool usage
 
 Always use Linux pathing and utilities for the bash tool. You have access to a bash prompt (via Git Bash on Windows). What platform you're actually running on is irrelevant — always write commands as if you're on Linux:
