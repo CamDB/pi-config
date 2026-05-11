@@ -34,6 +34,69 @@ git commit -m "brief description"
 git push
 ```
 
+# Pi Self-Modification
+
+When writing pi extensions, prompt templates, or skills, the following
+pi-specific mechanics are easy to get wrong.
+
+## Slash-command namespace is shared
+
+Extensions and prompt templates both register slash commands, and they
+share the same namespace. A template `prompts/foo.md` creates `/foo`, which
+collides with any extension that also registers `/foo`. The user will see
+two entries in the slash-command menu and one may shadow the other.
+
+Before creating a prompt template, check for collisions:
+
+```bash
+ls ~/.pi/agent/prompts/ ~/.pi/agent/extensions/ | grep <name>
+```
+
+## SDK types are not always accurate at runtime
+
+The pi SDK ships `.d.ts` type declarations, but runtime return types
+occasionally differ. Known examples:
+
+- `SessionManager.list()` returns `{path, created, messageCount,
+  firstMessage}` — not `{file, timestamp}`.
+- The `created` field may not be a `Date` or `string`; always coerce:
+  `String(s.created ?? "")`.
+
+Before wiring an SDK call into an extension, test its actual output shape
+in a one-liner:
+
+```bash
+node -e "const {SessionManager} = require('@earendil-works/pi-coding-agent');
+SessionManager.listAll().then(s => console.log(JSON.stringify(s[0])))"
+```
+
+## TypeScript compilation does not run automatically
+
+Extensions are `.ts` files loaded at runtime. There is no build step —
+syntax errors and type mismatches surface only when the user runs the
+command. Always check with:
+
+```bash
+npx tsc --noEmit --strict ~/.pi/agent/extensions/<name>.ts
+```
+
+## Prefer working examples over reference docs
+
+The pi docs under `~/.local/share/fnm/node-versions/v24.1.0/installation/lib/node_modules/@earendil-works/pi-coding-agent/docs/`
+are comprehensive but verbose. When learning a specific API (command
+registration, TUI components, SessionManager), grep the user's existing
+extensions first — the patterns are more concise and guaranteed to work:
+
+```bash
+grep -r "registerSlashCommand\|SessionManager\|ExtensionAPI" ~/.pi/agent/extensions/
+```
+
+## Session format reference
+
+The session JSONL schema is documented at:
+`<pi-install>/docs/session-format.md`. Cross-reference it when consuming
+session objects; do not assume field names.
+
 # Bash tool usage
 
 Always use Linux pathing and utilities for the bash tool. You have access to a bash prompt (via Git Bash on Windows). What platform you're actually running on is irrelevant — always write commands as if you're on Linux:
