@@ -404,34 +404,35 @@ ${sessionContent}
 
 ## Analysis Instructions
 
-Produce a structured retrospective covering these dimensions:
+Produce a structured retrospective. Focus on **generalized, cross-project
+issues** — things that apply regardless of language, framework, or codebase.
+Do not suggest project-specific fixes (CLAUDE.md, language idioms, framework
+APIs). Only suggest project-agnostic improvements: tool patterns, skills,
+extensions, prompt templates, and APPEND_SYSTEM.md changes that would help
+in ANY future session.
 
-### 1. Mistakes & Wrong Turns
-Where did the model make errors, incorrect assumptions, or need to backtrack?
-Would clearer project instructions in **AGENTS.md / CLAUDE.md / APPEND_SYSTEM.md**
-have prevented these?
-
-### 2. Tool Usage Issues
+### 1. Tool Usage Issues
 - Wrong tool for the job? Suboptimal ordering (e.g. editing before reading)?
-- Over-reading files or reading unnecessary files?
+- Over-reading files or re-reading content already in context?
 - Missing opportunities (available tools not used)?
 - Inefficient bash patterns (not using grep/find when they'd be faster)?
 
-### 3. Skill & Extension Gaps
+### 2. Skill & Extension Gaps
 - Were available **skills** not invoked when they would have helped?
 - Were skills or extensions used incorrectly?
 - What **new skills or extensions** would have made this session better?
 - Would a **prompt template** be useful for repeated workflows?
 
-### 4. System Prompt & Documentation Improvements
-- What specific lines should be added to CLAUDE.md, APPEND_SYSTEM.md, or a
-  custom SYSTEM.md?
-- Are there project conventions the model keeps getting wrong?
+### 3. Recurring Mistakes
+- Does the model make the same type of error across multiple turns?
+- Are there meta-patterns (e.g., defends wrong answer instead of verifying,
+  edits before reading types, assumes API surface without checking)?
 
-### 5. Recurring Patterns
-- Does the model make the same type of mistake across multiple turns?
-- Are there meta-patterns (e.g., always picks wrong file first, always forgets
-  to read before editing)?
+### 4. System Prompt Improvements
+- What changes to **APPEND_SYSTEM.md** would prevent these issues in future
+  sessions, across any project?
+- What new **skills, extensions, or prompt templates** would close gaps?
+- Do not suggest project-specific files (CLAUDE.md, AGENTS.md, etc.).
 
 ### Output Format
 
@@ -439,10 +440,11 @@ For each finding provide:
 
 - **What happened** — the specific exchange(s), with turn numbers
 - **Impact** — how it affected the session (wasted tokens, wrong output, rework)
-- **Recommendation** — a concrete fix the user can implement in <5 minutes
-  (e.g. *"Add 'Always run \`cargo check\` before editing Rust files' to APPEND_SYSTEM.md"*,
-  or *"Create a skill for X workflow"*)
+- **Recommendation** — a concrete, project-agnostic fix: a new skill,
+  extension, prompt template, or APPEND_SYSTEM.md addition. Say exactly
+  what to create or change.
 
-Prioritize the most impactful findings first. Be specific and actionable.
-Avoid vague suggestions — say exactly what file to change and what to add.`;
+Only include findings that suggest a generalized improvement. Skip anything
+that is specific to the project's language, framework, or codebase.
+Prioritize the most impactful findings first.`;
 }
