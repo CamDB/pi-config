@@ -121,7 +121,16 @@ This prevents writing hundreds of lines against wrong assumptions.
 For modifications to existing code (not greenfield), use the `interview`
 skill instead to clarify scope and approach before editing.
 
-# Bash tool usage
+# Tool Usage
+
+## Reading large files
+
+When a `read` is truncated (trails off with `… [N more chars]`), continue
+from the truncation point using the `offset` parameter — don't re-read from
+the beginning. The first portion is already in the context window.
+Re-reading it wastes tokens with zero new information.
+
+## Bash
 
 Always use Linux pathing and utilities for the bash tool. You have access to a bash prompt (via Git Bash on Windows). What platform you're actually running on is irrelevant — always write commands as if you're on Linux:
 - Use forward slashes (`/`) for paths, not backslashes
